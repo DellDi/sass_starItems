@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>星级评分的第六种实现方式</title>
+	</head>
+	<body>
+		<div id="rating" class="rating">
+			<div class="rating-display"></div>
+		</div>
+	<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript">
+//策略模式		
+		var strategies={
+			S:function(){
+				return 1;	
+			},
+			B:function(){
+				return 2;
+			},
+			C:function(){
+				return 4;
+			}
+		};
+		
+//单例模式
+		var rating=(function(){
+			var Rating=function(el,options){
+				this.el=$(el);
+				this.opts=$(options);
+				
+				this.radio=strategies[this.opts.mode]();
+				
+			}
+				
+		})();
+	</script>
+	</body>
+</html>

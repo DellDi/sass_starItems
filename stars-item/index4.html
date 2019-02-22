@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>星级评分的第二种方式</title>
+		<style>
+			body,ul,li{
+				padding: 0;
+				margin: 0;
+			}
+			.rating{
+				width: 160px;
+				height: 32px;
+				margin: 150px auto;
+			}
+			.rating-item{
+				float: left;
+				width: 32px;
+				height: 32px;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="rating" id="rating">
+			<img src="img/rating-off.png" title="很不好" alt="星星" class="rating-item">
+			<img src="img/rating-off.png" title="不好" alt="星星" class="rating-item">
+			<img src="img/rating-off.png" title="一般" alt="星星" class="rating-item">
+			<img src="img/rating-off.png" title="好" alt="星星" class="rating-item">
+			<img src="img/rating-off.png" title="很好" alt="星星" class="rating-item">
+		</div>
+		
+		<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+		<script>
+//构造父类,是一个自我可执行的闭包函数
+			var rating=(function(){
+			// LightEntire.prototype=new Light();//原型链
+							var extend=function(subClass,superClass){
+								var F=function(){};
+									F.prototype=superClass.prototype;
+									subClass.prototype=new F();
+									subClass.prototype.constructor=subClass;
+							};
+							
+						
+			//点亮		
+							var Light=function(el,options){
+								this.$el=$(el);
+								this.$item=this.$el.find('.rating-item');
+								this.opts=options;
+								this.add=1;
+								this.selectEvent='mouseover';
+							};
+							//初始化方法,决定函数的执行顺序
+							Light.prototype.init=function(){
+								this.lightOn(this.opts.num);
+								if(!this.opts.readOnly){
+									this.bindEvent();
+								}
+							};
+							Light.prototype.lightOn=function(num){
+								num=parseInt(num);
+								this.$item.each(function(index){
+									if(index < num){
+										$(this).attr("src", "img/rating-on.png");
+									}else{
+										$(this).attr("src", "img/rating-off.png");
+									}
+								})
+							};
+							//绑定事件
+							Light.prototype.bindEvent=function(){
+								var self=this,
+										itemLength=self.$item.length;//需要将this重新指向实例化对象
+								//中间的参数就是事件委托,每颗星不用单独添加一个方法,由父类进行执行 
+								self.$el.on(self.selectEvent,'.rating-item',function(e){		//这里出现了严重的问题 
+									var $this=$(this),
+										num=0;
+										
+									self.select(e,$this);
+									num=$(this).index()+self.add
+									self.lightOn(num);
+									 
+									(typeof self.opts.select==='function')&&self.opts.select.call(this,num,itemLength);//前面的成立,后面的才会执行,呼叫函数改变this指向
+									self.$el.trigger('select',[num,itemLength]);//trigger触发元素的事件
+								}).on('click','.rating-item',function(){
+									self.opts.num=$(this).index()+self.add;		//覆盖掉初始化num
+									
+									(typeof self.opts.chosen==='function')&&self.opts.chosen.call(this,self.opts.num,itemLength);
+									self.$el.trigger('chosen',[self.opts.num,itemLength]);
+								});
+								self.$el.on('mouseout',function(){
+									self.lightOn(self.opts.num);   
+								});	
+							};
+							
+							Light.prototype.select=function(){
+								throw new Error();
+							};
+							Light.prototype.unbindEvent=function(){
+								this.$el.off();
+							};
+							
+//点亮整颗
+
+				var LightEntire=function(el,options){
+								Light.call(this,el,options);
+								this.selectEvent='mouseover';
+							};
+							extend(LightEntire,Light);
+							//初始化方法,决定函数的执行顺序
+							
+							LightEntire.prototype.lightOn=function(num){
+								Light.prototype.lightOn.call(this,num);
+							};
+							LightEntire.prototype.select=function(){
+								self.add=1;
+							}	
+//点亮半颗													
+							
+				var LightHalf=function(el,options){
+								Light.call(this,el,options);
+								this.selectEvent='mousemove';
+							};
+							extend(LightHalf,Light);
+							//初始化方法,决定函数的执行顺序
+							
+							LightHalf.prototype.lightOn=function(num){
+								var count=parseInt(num),
+									isHalf=count!==num;
+								
+								Light.prototype.lightOn.call(this,count);
+								
+									if(isHalf){
+										this.$item.eq(count).attr('src','img/rating-half.png');
+								}
+							};
+							LightHalf.prototype.select=function(e,$this){
+								if(e.pageX-$this.offset().left<$this.width()/2){//半颗
+									this.add=0.5;
+								}else{//整颗
+									this.add=1;
+									}
+							}
+//默认参数
+						var defaults={
+							mode:'LightHalf',
+							num:2,
+							readOnly:false,//是否是只读状态,就是不能绑定事件
+							select:function(){
+								
+							},
+							chosen:function(){
+								
+							}
+						};
+						
+						var mode={
+							'LightEntire':LightEntire,
+							'LightHalf':LightHalf
+						};
+				//初始化
+						var init=function(el,option){
+							
+							var $el=$(el),
+								rating=$el.data('rating'),
+								options=$.extend({},defaults,typeof option==='object'&&option);		//新参数覆盖自己
+							
+							if(!mode[options.mode]){
+								options.mode='LightHalf';
+							}
+							// new LightEntire(el,options).init();
+							// new LightHalf(el,options).init();
+							if(!rating){	
+								$el.data('rating',(rating=new mode[options.mode](el,options)));
+								rating.init();
+							}
+							if(typeof option==='string')rating[option]();
+						};	//赋值的方法需要加星号
+				//JQuery插件
+						$.fn.extend({
+							rating:function(option){
+								return this.each(function(){
+									init(this,option);
+								});
+							}
+						})
+						
+						
+						return {
+							init:init
+						};
+					})();
+					
+					
+					$("#rating").rating({
+						mode:'LightHalf',
+						readOnly:false,
+						num:2.5,
+					});
+// 					$("#rating2").rating({
+// 						mode:'LightHalf',
+// 						num:2.5,
+// 					});
+// 					$("#rating").on('chosen',function(){
+// 						$("#rating").rating('unbindEvent');
+// 					})										
+		</script>
+	</body>
+</html>

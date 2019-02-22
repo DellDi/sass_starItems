@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>第五种实现方式(单例模式+策略模式)</title>
+		<style type="text/css">
+			body,ul,li{
+				margin: 0;
+				padding: 0;
+			}
+			li{
+				list-style-type: none;
+			}
+			.rating,.rating-display{
+				background: url(img/star-new.png) repeat-x;
+			}
+			.rating{
+				position: relative;
+				width: 165px;
+				margin: 100px auto;
+			}
+			.rating-display{
+				width: 32px;
+				height: 32px;
+				background-position: 0 -40px;
+			}
+			.rating-mask{
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 100%;	
+			}
+			.rating-item{
+				float: left;
+				height: 32px;
+				width: 32px;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		
+		<div id="rating" class="rating">
+			
+		</div>
+		
+		<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+//策略模式	(第五种最终的总结，那就是使用的标签数量太多，课后有第六种总结)		
+			var strategies={
+				entire:function(){
+					return 1;
+				},
+				half:function(){
+					return 2;
+				},
+				quarter:function(){
+					return 4;
+				}
+				
+			};	
+	
+// 单例模式	(闭包)		
+			var rating=(function(){
+				//评分
+				var Rating=function(el,options){
+					this.$el=$(el);
+					this.opts=$.extend({},Rating.DEFAULTS,options);		//参数覆盖
+					if(!strategies[this.opts.mode]){
+							this.opts.mode='entire';							
+					}
+					this.ratio=strategies[this.opts.mode]();		//使用策略模式,调用算法(方法)
+					
+					this.opts.total*=this.ratio;
+					this.opts.num*=this.ratio;						//这里就是直接修改2的倍数ridio(策略函数中的参数)  就可以改变星星的点亮种类了
+					
+					this.itemWidth=33/this.ratio;
+					this.displayWidth=this.opts.num*this.itemWidth;	//每一个完整的星星,展示几分之几的星星
+				};
+				
+				Rating.DEFAULTS={
+					
+					mode:'entire',//策略模式的选择
+					total:5,
+					num:2,
+					readOnly:false,
+					select:function(){
+						//划过星星执行的函数
+					},
+					chosen:function(){
+						//点击选中星星后执行的函数
+					}
+				};
+				
+				Rating.prototype.init=function(){
+					this.buildHTML();
+					this.setCSS();
+					if(!this.opts.readOnly){
+						this.bindEvent();
+					}
+				};
+				//创建HTML结构
+				Rating.prototype.buildHTML=function(){
+					var html='';
+					
+					html+='<div class="rating-display"></div><ul class="rating-mask">';
+					//一颗星里面,有多少个li,就有多少个点亮
+					for(var i=0;i<this.opts.total;i++)
+					{
+						html+='<li class="rating-item"></li>';
+					}
+					html+='</ul>';
+					this.$el.html(html);
+				};
+				
+				Rating.prototype.setCSS=function(){//设置CSS样式
+					this.$el.width(this.opts.total*this.itemWidth);
+					this.$display=this.$el.find('.rating-display');
+					this.$display.width(this.displayWidth);
+					this.$el.find('.rating-item').width(this.itemWidth);
+				};
+				
+				Rating.prototype.bindEvent=function(){//绑定事件
+					var self=this;			//self指向Rating
+					this.$el.on('mouseover','.rating-item',function(){
+						var count=$(this).index()+1;
+						
+						self.$display.width(count*self.itemWidth);
+						
+						(typeof self.opts.select==='function')&&self.opts.select.call(this,count,self.opts.total);
+						self.$el.trigger('select',[count,self.opts.total]);
+					}).on('click','.rating-item',function(){
+						var count=$(this).index()+1;
+						
+						self.displayWidth=count*self.itemWidth;
+						
+						(typeof self.opts.chosen==='function')&&self.opts.chosen.call(this,count,self.opts.total);
+						self.$el.trigger('chosen',[count,self.opts.total]);
+					}).on('mouseout',function(){
+						self.$display.width(self.displayWidth);
+					});
+				};
+				
+				Rating.prototype.unbindEvent=function(){
+					this.$el.off();
+				};
+				var init=function(el,option){
+					// new Rating(el,option).init();
+					var $el=$(el),
+						rating=$el.data('rating');
+					
+					if(!rating){
+						
+						$el.data('rating',(rating=new Rating(el,typeof option==='object'&&option)));
+						rating.init();
+					};
+					if(typeof option==='string')rating[option]();//如果是字符串,那么直接用方法名,来进行调用
+				};
+				
+				//jquery插件
+				$.fn.extend({
+					rating:function(option){
+						return this.each(function(){
+							init(this,option);
+						}); 
+					}
+				});
+				
+				return{
+					init:init
+				};
+			})();
+			
+			$('#rating').rating({
+				mode:'quarter',
+				total:5,
+				num:2,
+				readOnly:false,
+				select:function(count,total){
+					console.log(this);
+					console.log(count+'/'+total);
+				},
+				chosen:function(count,total){
+					// console.log(this);	
+					$('#rating').rating('unbindEvent');		//当选中一颗星之后,就可以变成只读状态
+				}
+			});
+			
+			
+// 			rating.init('#rating',{
+// 				total:6,
+// 				num:3,
+// 				readOnly:false,
+// 				select:function(count,total){
+// 					console.log(this);
+// 					console.log(count+'/'+total);
+// 				},
+// 				chosen:function(count,total){
+// 					// console.log(this);	
+// 					rating.init('#rating','unbindEvent');		//当选中一颗星之后,就可以变成只读状态
+// 				}
+// 			});
+		</script>
+	</body>
+</html>

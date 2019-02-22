@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>星级评分的第一种实现方式</title>
+		<style type="text/css">
+			body,ul,li{
+				padding: 0;
+				margin: 0;
+			}
+			li{
+				list-style-type: none;
+			}
+			.rating{
+				width: 160px;
+				height: 32px;
+				margin: 150px auto;
+			}
+			.rating-item{
+				float: left;
+				width: 32px;
+				height: 32px;
+				background:url(img/stars.png) no-repeat;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<!-- 第一种实现方式 -->
+		<ul id="rating" class="rating">
+			<li class="rating-item" title="差"></li>
+			<li class="rating-item" title="不好"></li>
+			<li class="rating-item" title="一般"></li>
+			<li class="rating-item" title="很好"></li>
+			<li class="rating-item" title="优秀"></li>
+		</ul>
+		<ul id="rating2" class="rating">
+			<li class="rating-item" title="差"></li>
+			<li class="rating-item" title="不好"></li>
+			<li class="rating-item" title="一般"></li>
+			<li class="rating-item" title="很好"></li>
+			<li class="rating-item" title="优秀"></li>
+		</ul>
+		<!-- <div>
+			<a href="javascript:;"  class="rating-item" title="差"></a>
+			<a href="javascript:;"  class="rating-item" title="不好"></a>
+			<a href="javascript:;"  class="rating-item" title="一般"></a>
+			<a href="javascript:;"  class="rating-item" title="很好"></a>
+			<a href="javascript:;"  class="rating-item" title="优秀"></a>
+		</div> -->
+		<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+		<script type="text/javascript">
+			
+		var rating=(function(){
+				// LightEntire.prototype=new Light();//原型链
+				var extend=function(subClass,superClass){
+					var F=function(){};
+						F.prototype=superClass.prototype;//F与父类共享一个构造函数
+						subClass.prototype=new F();
+						subClass.prototype.constructor=subClass;//子类的原型为F的实例。避免了创建一个父类的实例,避免了一些父类构造函数的副作用
+				};//最后的实例化对象的原型构造方法,指向实例化本身.而不是父类
+				
+			
+//点亮		
+				var Light=function(el,options){
+					this.$el=$(el);
+					this.$item=this.$el.find('.rating-item');
+					this.opts=options;
+					this.add=1;
+					this.selectEvent='mouseover';
+				};
+				//初始化方法,决定函数的执行顺序
+				Light.prototype.init=function(){
+					this.lightOn(this.opts.num);
+					if(!this.opts.readOnly){
+						this.bindEvent();
+					}
+					
+				};
+				Light.prototype.lightOn=function(num){
+					num=parseInt(num);
+					this.$item.each(function(index){
+						if(index < num){
+							$(this).css('background-position','0 -40px');
+						}else{
+							$(this).css('background-position','0 0');
+						}
+					})
+				};
+				//绑定事件
+				Light.prototype.bindEvent=function(){
+					var self=this,
+							itemLength=self.$item.length;//需要将this重新指向实例化对象
+					//中间的参数就是事件委托,每颗星不用单独添加一个方法,由父类进行执行 
+					self.$el.on(self.selectEvent,'.rating-item',function(e){		//这里出现了严重的问题 
+						var $this=$(this),
+							num=0;
+							
+						self.select(e,$this);
+						num=$(this).index()+self.add
+						self.lightOn(num);
+						 
+						(typeof self.opts.select==='function')&&self.opts.select.call(this,num,itemLength);//前面的成立,后面的才会执行,呼叫函数改变this指向
+						self.$el.trigger('select',[num,itemLength]);//trigger触发元素的事件
+					}).on('click','.rating-item',function(){
+						self.opts.num=$(this).index()+self.add;		//覆盖掉初始化num
+						
+						(typeof self.opts.chosen==='function')&&self.opts.chosen.call(this,self.opts.num,itemLength);
+						self.$el.trigger('chosen',[self.opts.num,itemLength]);
+					});
+					self.$el.on('mouseout',function(){
+						self.lightOn(self.opts.num);   
+					});	
+				};
+				
+				Light.prototype.select=function(){
+					throw new Error();
+				};
+				Light.prototype.unbindEvent=function(){
+					this.$el.off();
+				};
+				
+				
+	
+	
+//点亮整颗
+					var LightEntire=function(el,options){
+						Light.call(this,el,options);
+						this.selectEvent='mouseover';
+					};
+					extend(LightEntire,Light);
+					//初始化方法,决定函数的执行顺序
+					
+					LightEntire.prototype.lightOn=function(num){
+						Light.prototype.lightOn.call(this,num);
+					};
+					LightEntire.prototype.select=function(){
+						self.add=1;
+					}
+					
+					//绑定事件
+// 					LightEntire.prototype.bindEvent=function(){
+// 						var self=this,
+// 								itemLength=self.$item.length;//需要将this重新指向实例化对象
+// 						//中间的参数就是事件委托,每颗星不用单独添加一个方法,由父类进行执行 
+// 						self.$el.on('self.selectEvent','.rating-item',function(){
+// 							var num=$(this).index()+self.add;
+// 							
+// 							self.select();
+// 							self.lightOn(num);
+// 							
+// 							(typeof self.opts.select==='function')&&self.opts.select.call(this,num,itemLength);//前面的成立,后面的才会执行,呼叫函数改变this指向
+// 							self.$el.trigger('select',[num,itemLength]);//trigger触发元素的事件
+// 						}).on('click','.rating-item',function(){
+// 							self.opts.num=$(this).index()+self.add;		//覆盖掉初始化num
+// 							
+// 							(typeof self.opts.chosen==='function')&&self.opts.chosen.call(this,self.opts.num,itemLength);
+// 							self.$el.trigger('chosen',[self.opts.num,itemLength]);
+// 						});
+// 						self.$el.on('mouseout',function(){
+// 							self.lightOn(self.opts.num);   
+// 						});	
+// 					};
+					
+				
+//点亮半颗!!!!!!!!!!!!!
+				var LightHalf=function(el,options){
+					Light.call(this,el,options);
+					this.selectEvent='mousemove';
+				};
+				extend(LightHalf,Light);
+				//初始化方法,决定函数的执行顺序
+				
+				LightHalf.prototype.lightOn=function(num){
+					var count=parseInt(num),
+						isHalf=count!==num;
+					
+					Light.prototype.lightOn.call(this,count);
+					
+						if(isHalf){
+							this.$item.eq(count).css('background-position','0 -80px');
+					}
+				};
+				LightHalf.prototype.select=function(e,$this){
+					if(e.pageX-$this.offset().left<$this.width()/2){//半颗
+						this.add=0.5;
+					}else{//整颗
+						this.add=1;
+						}
+				}
+				//绑定事件
+// 				LightHalf.prototype.bindEvent=function(){
+// 					var self=this,
+// 							itemLength=self.$item.length;//需要将this重新指向实例化对象
+// 					//中间的参数就是事件委托,每颗星不用单独添加一个方法,由父类进行执行 
+// 					self.$el.on('self.selectEvent','.rating-item',function(e){
+// 						var $this=$(this),
+// 							num=0;
+// 						if(e.pageX-$this.offset().left<$this.width()/2){//半颗
+// 							self.add=0.5;
+// 						}else{//整颗
+// 							self.add=1;
+// 						}
+// 						
+// 						
+// 						num=$this.index()+0.5
+// 						var num=$(this).index()+self.add;
+// 						
+// 						self.select();//把上面的方法,封装到self.select里面
+// 						
+// 						self.lightOn(num);
+// 						
+// 						(typeof self.opts.select==='function')&&self.opts.select.call(this,num,itemLength);//前面的成立,后面的才会执行,呼叫函数改变this指向
+// 						self.$el.trigger('select',[num,itemLength]);//trigger触发元素的事件
+// 						
+// 					}).on('click','.rating-item',function(){
+// 						self.opts.num=$(this).index()+self.add;		//覆盖掉初始化num
+// 						
+// 						(typeof self.opts.chosen==='function')&&self.opts.chosen.call(this,self.opts.num,itemLength);
+// 						self.$el.trigger('chosen',[self.opts.num,itemLength]);
+// 					});
+// 					
+// 					self.$el.on('mouseout',function(){
+// 						self.lightOn(self.opts.num);   
+// 					});	
+// 				};
+				
+				
+				//默认参数
+				var defaults={
+					mode:'LightHalf',
+					num:0,
+					readOnly:false,//是否是只读状态,就是不能绑定事件
+					select:function(){
+						
+					},
+					chosen:function(){
+						
+					}
+				};
+				
+				var mode={
+					'LightEntire':LightEntire,
+					'LightHalf':LightHalf
+				};
+				//初始化
+				var init=function(el,option){
+					
+					var $el=$(el),
+						rating=$el.data('rating'),
+						options=$.extend({},defaults,typeof option==='object'&&option);		//新参数覆盖自己
+					
+					if(!mode[options.mode]){
+						options.mode='LightHalf';
+					}
+					// new LightEntire(el,options).init();
+					// new LightHalf(el,options).init();
+					if(!rating){	
+						$el.data('rating',(rating=new mode[options.mode](el,options)));
+						rating.init();
+					}
+					if(typeof option==='string')rating[option]();
+				};		//赋值的方法需要加星号
+		//JQuery插件
+				$.fn.extend({
+					rating:function(option){
+						return this.each(function(){
+							init(this,option);
+						});
+					}
+				})
+				
+				
+				return {
+					init:init
+				};
+			})();
+			
+			
+			$("#rating").rating({
+				mode:'LightEntire',
+				num:1,
+			});
+			$("#rating2").rating({
+				mode:'LightHalf',
+				num:2.5,
+			});
+			$("#rating2").on('chosen',function(){
+				$("#rating2").rating('unbindEvent');
+			})
+			
+// 			rating.init('#rating',{
+// 				num:2.5,
+// 				mode:'szfd', //瞎写
+// // 				select:function(num,total){
+// // 					console.log(this);
+// // 					console.log(num+"/"+total);
+// // 				},
+// 				chosen:function(){
+// 					rating.init('#rating','unbindEvent');
+// 				}
+// 				
+// 			});
+
+
+// 			rating.init('#rating2',{
+// 				num:3,
+// 				mode:'LightEntire'
+// 			})
+		/* 	$('#rating').on('select',function(e,num,total){
+				console.log(num+"/"+total);
+			}).on('chosen',function(e,num,total){
+				console.log(num+"/"+total);
+			// }); */			/* 打印星标和当前星标 */
+			//星标定位初始化,each(),就是循环遍历,修改为闭包的方式,防止各种变量的冲突.函数的自我执行
+			
+			//这里进行了函数改造,返回一个init对象,方便复用
+			
+		
+			/* var rating=(function (){
+			//点亮
+					var lightOn=function($item,num){	
+							$item.each(function(index){
+							if(index < num){
+								$(this).css('background-position','0 -40px');
+							}else{
+								$(this).css('background-position','0 0');
+							}
+						})
+					};			
+				
+			//这里是为了与外界通信
+					var init=function(el,num){
+						var $rating=$(el),
+							$item=$rating.find('.rating-item');			
+					//初始化注释
+							lightOn($item,num);
+					//事件绑定,事件委托!!!
+							$rating.on('mouseover','.rating-item',function(){
+								lightOn($item,$(this).index()+1);
+							}).on('click','.rating-item',function(){
+								num=$(this).index()+1;
+							});
+							$rating.on('mouseout',function(){
+								lightOn($item,num);   
+							});	
+					};
+				// jQuery插件,each是为遍历,存在取class元素的情况
+				$.fn.extend({
+					rating:function(num){
+						return this.each(function(){
+							init(this,num)
+						});
+					}
+				});
+				return{
+					init:init		//返回一个对象
+				};
+	
+			})();
+			rating.init('#rating',2);
+			
+			// rating.init('#rating2',3);
+			$('#rating2').rating(4); */
+			
+		</script>
+	</body>
+</html>

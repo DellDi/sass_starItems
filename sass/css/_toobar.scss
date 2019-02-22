@@ -1,0 +1,295 @@
+// 1.背景图片的方式
+/* @mixin toolbar-item($pos,$hoverPos){
+	background-position: 0 $pos;
+		&:hover{
+			background-position: 0 $hoverPos;
+		}
+	}
+
+$toolbar-size:52px;
+.toolbar-layer,.toolbar-item{
+	background-image:url(../img/toolbar.png);
+	background-repeat:no-repeat;
+}
+ .toolbar{
+ 	position: fixed;
+ 	bottom: 10px;
+ 	left: 50%;
+ 	margin-left: -$toolbar-size/2;
+ }
+ .toolbar-item{
+	position: relative;
+ 	display: block;
+ 	width: $toolbar-size;
+ 	height: $toolbar-size;
+ 	background-image:url(../img/toolbar.png);
+ 	background-repeat:no-repeat;
+ 	margin-top: 1px;
+	@include transition(background-position 1s); 
+	&:hover{
+		.toolbar-layer{
+			
+			@include opacity(1);
+			
+			@include scale(1);
+		}
+	}
+ }
+ .toolbar-item-weixin{
+ 	
+	@include toolbar-item(-798px,-860px);
+	.toolbar-layer{
+		height: 212px;
+		background-position:0 0;
+	}
+ }
+ .toolbar-item-feedback{
+	@include toolbar-item(-426px,-488px);
+ }
+ .toolbar-item-app{
+	@include toolbar-item(-550px,-612px);
+	.toolbar-layer{
+		height: 194px;
+		background-position:0 -222px;
+	}
+ }
+ .toolbar-item-top{
+	@include toolbar-item(-674px,-736px);
+ }
+ .toolbar-layer{
+ 	position: absolute;
+	right: $toolbar-size - 5;//运算符两边一定要有空格
+	bottom: -10px;
+	width: 172px;
+	background-image:url(../img/toolbar.png);
+	background-repeat:no-repeat;
+	opacity: 0;
+	filter:alpha(opacity=0);
+	@include transform-origin(95% 95%);//这是为了削弱阴影
+	@include scale(0.01); //为了保证二维码图片看不到了
+	transition: all 1s ;
+	@include transition(all 1s);
+ }	 */
+ 
+// 2.图标文字的正常方式 
+/* $toolbar-size:52px;
+.toolbar-item,.toolbar-btn,.toolbar-icon,.toolbar-text{
+	width: $toolbar-size;
+	height: $toolbar-size;
+}
+.toolbar-icon,.toolbar-text{
+	position: absolute;
+	left: 0;
+	color: #fff;
+	text-align: center;
+	@include transition(top 1s);
+}
+.toolbar{
+	position: fixed;
+	left: 50%;
+	bottom: 5px;
+	margin-left:-$toolbar-size/2;
+}
+.toolbar-item{
+	position: relative;
+	display: block;
+	margin-top: 1px;
+	&:hover{
+		.toolbar-icon{
+			top: -$toolbar-size;
+		}
+		.toolbar-text{
+			top: 0;
+		}
+		.toolbar-layer{
+			@include opacity(1);
+			@include scale(1);
+		}
+	}
+}
+.toolbar-btn{
+	position: absolute;
+	left: 0;
+	top: 0;
+	
+	overflow: hidden;
+}
+.toolbar-icon{
+	
+	
+	top: 0;
+	
+	line-height: $toolbar-size; 
+	background-color: #d0d6d9;
+	font-size: 30px;
+	
+	
+
+}
+.toolbar-text{
+	
+	top: $toolbar-size;
+	
+	background-color: #98a1a6;
+	padding-top: 12px;
+	font-size: 12px;
+	
+	
+	line-height: 1.2;
+	
+}
+.toolbar-layer{
+	position: absolute;
+	right:$toolbar-size - 6;
+	bottom: -10px;
+	width: 172px;
+	background-image:url(../img/toolbar_img.png);
+	background-repeat: no-repeat;
+	@include opacity(0);
+	@include transform-origin(95% 95%);
+	@include scale(0.01);
+	@include transition(all 1s);
+}
+.toolbar-layer-weixin{
+	height: 212px;
+	background-position: 0 0;
+}
+.toolbar-layer-app{
+	height: 194px;
+	background-position: 0 -222px;
+} */
+
+// 3.伪类的方式+图标文字
+$toolbar-size:52px;
+.toolbar{
+	position: fixed;
+	left: 50%;
+	bottom: 5px;
+	margin-left: -$toolbar-size/2;
+}
+.toolbar-item{
+	position: relative;
+	display: block;
+	width: $toolbar-size;
+	height:$toolbar-size;
+	margin-top: 1px;
+	
+	&:hover{
+		.toolbar-btn{
+			&:before{
+				top: -$toolbar-size;
+			}
+			&:after{
+				top:0;
+			}
+		}
+		&:after{
+			@include opacity(1);
+			@include scale(1);
+		}
+	}
+	&:after{
+		content:"";
+		position: absolute;
+		right: $toolbar-size - 6;
+		bottom: -10px;
+		width: 172px;
+		background-image: url(../img/toolbar_img.png);
+		background-repeat:no-repeat ;
+		@include opacity(0);
+		@include scale(0.01);
+		@include transform-origin(95% 95%);
+		@include transition(all 1s);
+	}
+}
+
+.toolbar-item-weixin{
+	&:after{		//伪类：添加二维码图片
+		content:"";
+		height: 212px;
+		background-position:0 0;
+	}
+	.toolbar-btn{
+		@extend .icon-wechat;		//继承类，图标字体
+		&:after{
+			content:"公众\A账号";
+		}
+	}
+}
+.toolbar-item-feedback{
+	.toolbar-btn{
+		@extend .icon-envelop;		
+		&:after{
+			content:"意见\A反馈";
+		}
+	}
+}
+.toolbar-item-app{
+	&:after{
+		content:"";
+		height: 174px;
+		background-position:0 -222px;
+	}
+	.toolbar-btn{
+		@extend .icon-tablet;
+		&:after{
+			content:"APP\A下载";
+		}
+	}
+}
+.toolbar-item-top{
+	.toolbar-btn{
+		@extend .icon-arrow-up2;
+		&:after{
+			content:"返回\A顶部";
+		}
+	}
+}
+.toolbar-btn{
+	&,&:before,&:after{
+		position: absolute;
+		left: 0;
+		width:$toolbar-size;
+		height:$toolbar-size;
+	}
+	&:before,&:after{
+		content: "";
+		text-align: center;
+		color: #fff;
+	}
+	
+	top: 0;
+	
+	overflow: hidden;
+	
+	@extend [class^="icon-"];
+	
+
+	
+	&:before{//icon
+		
+		
+		top: 0;
+		
+		background-color: #d0d6d9;
+		font-size: 30px;
+		
+		
+		line-height: $toolbar-size;
+		@include transition(top 1s);
+	}
+	&:after{//text
+		
+		
+		top: $toolbar-size;
+		
+		
+		background-color: #98a1a6;
+		font-size: 12px;
+		padding-top: 12px;
+		
+		line-height: 1.2;
+		@include transition(top 1s);
+		white-space: pre; //空白会被浏览器保留
+	}
+}

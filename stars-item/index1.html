@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>星级评分的第一种实现方式</title>
+		<style type="text/css">
+			body,ul,li{
+				padding: 0;
+				margin: 0;
+			}
+			li{
+				list-style-type: none;
+			}
+			.rating{
+				width: 160px;
+				height: 32px;
+				margin: 150px auto;
+			}
+			.rating-item{
+				float: left;
+				width: 32px;
+				height: 32px;
+				background:url(img/stars.png) no-repeat;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<!-- 第一种实现方式 -->
+		<ul id="rating" class="rating">
+			<li class="rating-item" title="差"></li>
+			<li class="rating-item" title="不好"></li>
+			<li class="rating-item" title="一般"></li>
+			<li class="rating-item" title="很好"></li>
+			<li class="rating-item" title="优秀"></li>
+		</ul>
+		<!-- <div>
+			<a href="javascript:;"  class="rating-item" title="差"></a>
+			<a href="javascript:;"  class="rating-item" title="不好"></a>
+			<a href="javascript:;"  class="rating-item" title="一般"></a>
+			<a href="javascript:;"  class="rating-item" title="很好"></a>
+			<a href="javascript:;"  class="rating-item" title="优秀"></a>
+		</div> -->
+		<script src="http://libs.baidu.com/jquery/1.11.3/jquery.min.js"></script>
+		<script type="text/javascript">
+			
+			/* var content="asdad<p style=\"text-align:center;\">adjalkjdwn<span style='font-size: 20px;\">{a}{p}{p}l{e}</span>asaasdas</p>";
+			var obj=content.match(/>.*<\/span>/g);
+			var str=obj.toString();
+			var str1=str.replace(/{|}|\/|span|<|>/g,"");
+			
+			var str2=str1.substr();
+// 			
+// 			var str=content.substring(content.indexOf("20px")+7,content.indexOf("</span>"));
+// 			var str1=str.replace(/{|}/g,"");
+			alert(str2);
+			// var new_string=content.substring(content.indexOf('{'),content.lastIndexOf('}')+1);
+			// var new_string_2=new_string.replace("</p>","");
+			
+			// alert(string); */
+// 			var a="{adsasdkjawkljjdj}";
+// 			var value=a.replace(/[a-z]/ig,"");
+// 			var a={
+// 				name:'{}',
+// 				hah:{
+// 					xixi:0,
+// 					heihei:{}
+// 				}
+// 			}
+// 			
+// 			console.log(a);
+			var a="{a}p{p}l{e}";
+			var b="{cDDDas}s{aCSsasd}{s}sad";
+			var value1=a.replace(/\{.}/g,"{}");
+			var value2=b.replace(/\{[a-z]*\}/ig,"{}");
+			
+			alert(value1+"    "+value2);
+		</script>
+	</body>
+</html>
